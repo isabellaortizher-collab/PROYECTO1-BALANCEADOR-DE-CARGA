@@ -8,10 +8,10 @@ Proyecto de Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Tele
 | Integrante               | Rol en el proyecto |
 |------------------------|------------------|
 | Isabella Ortiz         | Infraestructura base + Docker + Balanceador |
-| Isabella Cabezas       | Integración aplicación web (CybersecurityLab) |
+| Julian Viafara         | Integración aplicación web (CybersecurityLab) |
 | Samuel Sepúlveda       | Configuración de algoritmos de balanceo |
 | Sebastián Cobos        | Pruebas de carga (Artillery) |
-| Julián Viafara         | Métricas y análisis de resultados |
+| Isabella Cabezas       | Métricas y análisis de resultados |
 | Valentina Velastegui   | Documentación (README + informe IEEE) |
 
 ---
@@ -47,21 +47,21 @@ Cliente → Balanceador (Apache) → Backends (3 servidores Nginx)
 
 ## 📁 Estructura del proyecto
 
-
+```
 proyecto1/
 │
 ├── docker-compose.yml
 ├── README.md
 │
 ├── balanceador/
-│ ├── Dockerfile
-│ └── apache.conf
+│   ├── Dockerfile
+│   └── apache.conf
 │
 ├── backend1/
 ├── backend2/
 ├── backend3/
-│ ├── Dockerfile
-│ └── index.html
+│   ├── Dockerfile
+│   └── index.html
 
 
 ---
