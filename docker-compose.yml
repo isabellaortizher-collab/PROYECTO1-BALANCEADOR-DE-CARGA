@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+
+  backend1:
+    build: ./backend1
+    container_name: backend1
+
+  backend2:
+    build: ./backend2
+    container_name: backend2
+
+  backend3:
+    build: ./backend3
+    container_name: backend3
+
+  balanceador:
+    build: ./balanceador
+    container_name: balanceador
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend1
+      - backend2
+      - backend3
