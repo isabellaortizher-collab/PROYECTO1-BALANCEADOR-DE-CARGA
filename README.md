@@ -8,7 +8,7 @@ Proyecto de Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Tele
 | Integrante               | Rol en el proyecto |
 |------------------------|------------------|
 | Isabella Ortiz         | Infraestructura base + Docker + Balanceador |
-| Julian Viafara         | Integración aplicación web (CybersecurityLab) |
+| Julián Viafara         | Integración aplicación web (CybersecurityLab) |
 | Samuel Sepúlveda       | Configuración de algoritmos de balanceo |
 | Sebastián Cobos        | Pruebas de carga (Artillery) |
 | Isabella Cabezas       | Métricas y análisis de resultados |
@@ -20,7 +20,7 @@ Proyecto de Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Tele
 
 Este proyecto implementa un **clúster de servidores web** utilizando contenedores Docker y un **balanceador de carga Apache**.
 
-El sistema permite distribuir las peticiones de los usuarios entre múltiples servidores backend para:
+Permite:
 
 - Mejorar el rendimiento  
 - Evitar sobrecarga en un solo servidor  
@@ -30,9 +30,9 @@ El sistema permite distribuir las peticiones de los usuarios entre múltiples se
 
 ## 🧩 Arquitectura del sistema
 
-
+```text
 Cliente → Balanceador (Apache) → Backends (3 servidores Nginx)
-
+```
 ---
 
 ## 🛠️ Tecnologías utilizadas
@@ -48,7 +48,7 @@ Cliente → Balanceador (Apache) → Backends (3 servidores Nginx)
 ## 📁 Estructura del proyecto
 
 ```
-proyecto1/
+.
 │
 ├── docker-compose.yml
 ├── README.md
@@ -83,7 +83,7 @@ Configurado como reverse proxy con:
 - mod_proxy  
 - mod_proxy_balancer  
 
-
+```
 <Proxy "balancer://cluster">
 BalancerMember http://backend1:80
 
@@ -96,36 +96,36 @@ ProxySet lbmethod=byrequests
 
 ProxyPass "/" "balancer://cluster/"
 ProxyPassReverse "/" "balancer://cluster/"
-
+```
 
 ---
 
 ## ▶️ Cómo ejecutar el proyecto
 
 ### 1. Clonar repositorio
-
+```
 
 git clone <URL_DEL_REPO>
 cd proyecto1
 
-
+```
 ---
 
 ### 2. Ejecutar contenedores
-
+```
 
 sudo docker-compose up --build
-
+```
 
 ---
 
 ### 3. Acceder
 
 Abrir en navegador:
-
+```
 
 http://192.168.50.3:8080
-
+```
 
 ---
 
@@ -138,10 +138,10 @@ http://192.168.50.3:8080
 
 ## ✅ Estado actual
 
-- Balanceador funcionando  
-- 3 backends activos  
-- Docker funcionando  
-- Acceso web correcto  
+✔ Balanceador funcionando
+✔ 3 backends activos
+✔ Docker funcionando
+✔ Acceso web correcto
 
 ---
 
@@ -156,9 +156,9 @@ https://github.com/julianviafara-arch/CybersecurityLab
 ### Cambiar algoritmo
 Modificar:
 
-
+```
 ProxySet lbmethod=byrequests
-
+```
 
 ---
 
