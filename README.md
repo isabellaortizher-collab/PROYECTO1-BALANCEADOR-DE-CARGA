@@ -63,7 +63,7 @@ proyecto1/
 │   ├── Dockerfile
 │   └── index.html
 
-
+```
 ---
 
 ## ⚙️ Configuración realizada
