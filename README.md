@@ -183,13 +183,13 @@ Analizar:
 ---
 
 ## 🛠️ Comandos útiles
-
+```
 
 sudo docker ps
 sudo docker logs balanceador
 sudo docker-compose down
 
-
+```
 ---
 
 ## 🎯 Conclusión
