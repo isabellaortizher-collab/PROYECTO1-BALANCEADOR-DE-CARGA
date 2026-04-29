@@ -16,38 +16,59 @@ Proyecto de Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Tele
 
 ---
 
-## 📌 Descripción del proyecto
+## 📌 ¿Qué se hizo?
 
-Este proyecto implementa un **clúster de servidores web** utilizando contenedores Docker y un **balanceador de carga Apache**.
+Se construyó la **infraestructura base del sistema**:
 
-Permite:
-
-- Mejorar el rendimiento  
-- Evitar sobrecarga en un solo servidor  
-- Aumentar la disponibilidad  
+- Máquina virtual con Vagrant
+- Instalación de Docker y Docker Compose
+- 3 servidores backend con Nginx
+- 1 balanceador de carga con Apache
+- Orquestación con Docker Compose
 
 ---
 
-## 🧩 Arquitectura del sistema
+## 🖥️ Entorno de trabajo
 
-```text
-Cliente → Balanceador (Apache) → Backends (3 servidores Nginx)
+- Ubuntu 22.04 (Vagrant)
+- IP servidor: `192.168.50.3`
+
+---
+
+## ⚙️ Instalación
+
+Dentro de la VM:
+
+```bash
+vagrant ssh servidor
+sudo apt update
+sudo apt install -y docker.io docker-compose
 ```
----
 
-## 🛠️ Tecnologías utilizadas
+Verificación:
 
-- Docker  
-- Docker Compose  
-- Apache HTTP Server (mod_proxy_balancer)  
-- Nginx  
-- Linux (Ubuntu en Vagrant)  
-
----
-
-## 📁 Estructura del proyecto
-
+```bash
+docker --version
+docker-compose --version
 ```
+
+---
+
+## 📁 Creación del proyecto
+
+```bash
+mkdir proyecto1
+cd proyecto1
+```
+
+---
+
+## 🧩 Arquitectura
+Cliente → Balanceador (Apache) → Backend1 / Backend2 / Backend3
+
+---
+
+## 📁 Estructura
 .
 │
 ├── docker-compose.yml
@@ -63,35 +84,50 @@ Cliente → Balanceador (Apache) → Backends (3 servidores Nginx)
 │   ├── Dockerfile
 │   └── index.html
 
-```
 ---
 
-## ⚙️ Configuración realizada
+## 🧩 Backends (Nginx)
 
-### 🔹 Infraestructura base (Docker)
+**Dockerfile**
 
-- 3 contenedores backend con Nginx  
-- Cada backend muestra una página distinta  
-- Todos conectados en red interna Docker  
+```dockerfile
+FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html
+```
+
+**index.html** (ejemplo)
+
+```html
+<h1>Backend 1</h1>
+```
 
 ---
 
-### 🔹 Balanceador de carga (Apache)
+## ⚖️ Balanceador (Apache)
 
-Configurado como reverse proxy con:
+**Dockerfile**
 
-- mod_proxy  
-- mod_proxy_balancer  
-
+```dockerfile
+FROM httpd:2.4
+COPY apache.conf /usr/local/apache2/conf/httpd.conf
 ```
+
+**apache.conf**
+
+```apache
+LoadModule mpm_event_module modules/mod_mpm_event.so
+LoadModule proxy_module modules/mod_proxy.so
+LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
+LoadModule proxy_http_module modules/mod_proxy_http.so
+LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
+
+Listen 80
+
 <Proxy "balancer://cluster">
-BalancerMember http://backend1:80
-
-BalancerMember http://backend2:80
-
-BalancerMember http://backend3:80
-
-ProxySet lbmethod=byrequests
+    BalancerMember http://backend1:80
+    BalancerMember http://backend2:80
+    BalancerMember http://backend3:80
+    ProxySet lbmethod=byrequests
 </Proxy>
 
 ProxyPass "/" "balancer://cluster/"
@@ -100,99 +136,85 @@ ProxyPassReverse "/" "balancer://cluster/"
 
 ---
 
-## ▶️ Cómo ejecutar el proyecto
+## 🐳 docker-compose.yml
 
-### 1. Clonar repositorio
+```yaml
+version: '3'
+services:
+  backend1:
+    build: ./backend1
+  backend2:
+    build: ./backend2
+  backend3:
+    build: ./backend3
+  balanceador:
+    build: ./balanceador
+    ports:
+      - "8080:80"
 ```
 
-git clone <URL_DEL_REPO>
-cd proyecto1
-
-```
 ---
 
-### 2. Ejecutar contenedores
-```
+## ▶️ Ejecución
 
+```bash
 sudo docker-compose up --build
 ```
 
 ---
 
-### 3. Acceder
-
-Abrir en navegador:
-```
-
+## 🌐 Acceso
 http://192.168.50.3:8080
-```
 
 ---
 
 ## 🧪 Verificación
 
-- Recargar la página varias veces  
-- Debe cambiar entre backend1, backend2 y backend3  
+- Recargar la página varias veces
+- Debe cambiar entre backend1, backend2 y backend3
 
 ---
 
 ## ✅ Estado actual
 
-✔ Balanceador funcionando
-✔ 3 backends activos
-✔ Docker funcionando
-✔ Acceso web correcto
+- ✔ Balanceador funcionando
+- ✔ 3 backends activos
+- ✔ Docker funcionando
 
 ---
 
 ## ⚠️ Pendiente (equipo)
 
-### Integrar aplicación real
-Usar:
+### 🔴 Integrar aplicación real
 https://github.com/julianviafara-arch/CybersecurityLab
 
----
-
-### Cambiar algoritmo
+### 🔴 Cambiar algoritmo
 Modificar:
 
-```
+```apache
 ProxySet lbmethod=byrequests
 ```
 
----
+### 🔴 Pruebas de carga
+Usar Artillery
 
-### Pruebas de carga
-Usar Artillery con múltiples usuarios
+### 🔴 Métricas
+- Latencia
+- Throughput
+- Errores
 
----
-
-### Métricas
-Analizar:
-
-- Latencia  
-- Throughput  
-- Errores  
-
----
-
-### Documentación
-- README final  
-- Informe IEEE  
+### 🔴 Documentación
+- Informe IEEE
 
 ---
 
 ## 🛠️ Comandos útiles
-```
 
+```bash
 sudo docker ps
 sudo docker logs balanceador
 sudo docker-compose down
-
 ```
 ---
-
 ## 🎯 Conclusión
-
-Se implementó un sistema de balanceo de carga funcional con Docker y Apache, listo para escalabilidad, pruebas de rendimiento e integración de una aplicación real.
-
+Se dejó lista la infraestructura base con balanceo de carga funcional, preparada para integrar una aplicación real y realizar pruebas de rendimiento.
