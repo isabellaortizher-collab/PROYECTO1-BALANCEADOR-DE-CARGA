@@ -69,6 +69,7 @@ Cliente → Balanceador (Apache) → Backend1 / Backend2 / Backend3
 ---
 
 ## 📁 Estructura
+```
 .
 │
 ├── docker-compose.yml
@@ -83,9 +84,15 @@ Cliente → Balanceador (Apache) → Backend1 / Backend2 / Backend3
 ├── backend3/
 │   ├── Dockerfile
 │   └── index.html
-
+```
 ---
+## 📄 Explicación de archivos
 
+- docker-compose.yml → define todos los servicios (backends y balanceador)
+- apache.conf → configuración del balanceador de carga
+- backend*/Dockerfile → crea cada servidor web con Nginx
+- index.html → contenido de prueba de cada backend
+---
 ## 🧩 Backends (Nginx)
 
 **Dockerfile**
