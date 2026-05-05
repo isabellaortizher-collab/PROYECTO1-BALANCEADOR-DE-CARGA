@@ -21,7 +21,6 @@ sudo docker compose up -d --build
 
 **¿Para qué se usa?:** Construye las imágenes de Apache y los servidores web basándose en los Dockerfile. El flag -d (detached) permite que los contenedores sigan corriendo sin bloquear tu terminal, y --build asegura que cualquier cambio en la configuración de Apache sea aplicado.
 
-Shutterstock
 
 
 **Ejecución de Pruebas de Carga (Reporte Local)**
