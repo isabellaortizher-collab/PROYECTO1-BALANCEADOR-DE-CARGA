@@ -1,0 +1,25 @@
+config:
+  target: "http://balancer:80"
+  phases:
+    - name: "Fase 1: 50 Usuarios concurrentes"
+      duration: 60
+      arrivalRate: 5
+      maxVusers: 50
+    - name: "Fase 2: 100 Usuarios concurrentes"
+      duration: 60
+      arrivalRate: 10
+      maxVusers: 100
+    - name: "Fase 3: 500 Usuarios concurrentes"
+      duration: 60
+      arrivalRate: 50
+      maxVusers: 500
+    - name: "Fase 4: 1000 Usuarios concurrentes"
+      duration: 60
+      arrivalRate: 100
+      maxVusers: 1000
+
+scenarios:
+  - name: "Navegación básica al backend"
+    flow:
+      - get:
+          url: "/"
