@@ -1,227 +1,39 @@
-# 🖥️ PROYECTO 1 — Balanceador de Carga con Apache y Docker
-Proyecto de Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Telemáticos
+## Estructura del Proyecto hasta ahora
+La organización de los archivos es la siguiente para asegurar que cada contenedor tenga sus responsabilidades aisladas:
+docker-compose.yml: Orquestador principal que levanta los servicios (balancer, web1, web2, web3 y artillery).
+/balancer: Contiene el Dockerfile de Apache y el archivo balancer.conf donde se definen los nodos y el algoritmo de balanceo (Round Robin o Least Connections).
+/web: Contiene la lógica de los servidores backend con sus respectivos directorios htmlX para identificar qué nodo responde.
+/artillery: Carpeta dedicada a las pruebas de carga, que incluye el script de pruebas y el almacenamiento de reportes generados.
 
----
-
-## 👩‍💻 Equipo de trabajo
-
-| Integrante               | Rol en el proyecto |
-|------------------------|------------------|
-| Isabella Ortiz         | Infraestructura base + Docker + Balanceador |
-| Julián Viafara         | Integración aplicación web (CybersecurityLab) |
-| Samuel Sepúlveda       | Configuración de algoritmos de balanceo |
-| Sebastián Cobos        | Pruebas de carga (Artillery) |
-| Isabella Cabezas       | Métricas y análisis de resultados |
-| Valentina Velastegui   | Documentación (README + informe IEEE) |
-
----
-
-## 📌 ¿Qué se hizo?
-
-Se construyó la **infraestructura base del sistema**:
-
-- Máquina virtual con Vagrant
-- Instalación de Docker y Docker Compose
-- 3 servidores backend con Nginx
-- 1 balanceador de carga con Apache
-- Orquestación con Docker Compose
-
----
-
-## 🖥️ Entorno de trabajo
-
-- Ubuntu 22.04 (Vagrant)
-- IP servidor: `192.168.50.3`
-
----
-
-## ⚙️ Instalación
-
-Dentro de la VM:
-
+Comandos de Ejecución
+A continuación, se describen los pasos para poner en marcha el entorno y realizar las mediciones.
+**1. Despliegue del Clúster**
+Este comando se encarga de construir las imágenes personalizadas y levantar los servicios en segundo plano.
 ```bash
-vagrant ssh servidor
-sudo apt update
-sudo apt install -y docker.io docker-compose
+sudo docker compose up -d --build
 ```
 
-Verificación:
-
+**¿Para qué se usa?:** Construye las imágenes de Apache y los servidores web basándose en los Dockerfile. El flag -d (detached) permite que los contenedores sigan corriendo sin bloquear tu terminal, y --build asegura que cualquier cambio en la configuración de Apache sea aplicado.
+Shutterstock
+**Ejecución de Pruebas de Carga (Reporte Local)**
+Una vez que el clúster está arriba, usamos el contenedor de Artillery para atacar al balanceador y generar métricas de rendimiento locales.
 ```bash
-docker --version
-docker-compose --version
+sudo docker compose run artillery run -o reports/resultado.json test-load.yml
 ```
-
----
-
-## 📁 Creación del proyecto
-
+**¿Para qué se usa?:** Arranca el contenedor de Artillery para ejecutar el script test-load.yml. El parámetro -o genera un archivo .json en la carpeta de reportes. Este archivo contiene datos técnicos detallados sobre latencia (p95, p99), errores y peticiones por segundo.
+** Visualización en la Web de Artillery (Artillery Cloud)**
+Para una interfaz gráfica avanzada y análisis histórico, los resultados se pueden subir a la plataforma oficial de Artillery.
 ```bash
-mkdir proyecto1
-cd proyecto1
+sudo docker compose run artillery run --record --key TU_API_KEY_AQUI test-load.yml
 ```
-
----
-
-## 🧩 Arquitectura
-Cliente → Balanceador (Apache) → Backend1 / Backend2 / Backend3
-
----
-
-## 📁 Estructura
-```
-.
-│
-├── docker-compose.yml
-├── README.md
-│
-├── balanceador/
-│   ├── Dockerfile
-│   └── apache.conf
-│
-├── backend1/
-├── backend2/
-├── backend3/
-│   ├── Dockerfile
-│   └── index.html
-```
----
-## 📄 Explicación de archivos
-
-- docker-compose.yml → define todos los servicios (backends y balanceador)
-- apache.conf → configuración del balanceador de carga
-- backend*/Dockerfile → crea cada servidor web con Nginx
-- index.html → contenido de prueba de cada backend
----
-## 🧩 Backends (Nginx)
-
-**Dockerfile**
-
-```dockerfile
-FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/index.html
-```
-
-**index.html** (ejemplo)
-
-```html
-<h1>Backend 1</h1>
-```
-
----
-
-## ⚖️ Balanceador (Apache)
-
-**Dockerfile**
-
-```dockerfile
-FROM httpd:2.4
-COPY apache.conf /usr/local/apache2/conf/httpd.conf
-```
-
-**apache.conf**
-
-```apache
-LoadModule mpm_event_module modules/mod_mpm_event.so
-LoadModule proxy_module modules/mod_proxy.so
-LoadModule proxy_balancer_module modules/mod_proxy_balancer.so
-LoadModule proxy_http_module modules/mod_proxy_http.so
-LoadModule lbmethod_byrequests_module modules/mod_lbmethod_byrequests.so
-
-Listen 80
-
-<Proxy "balancer://cluster">
-    BalancerMember http://backend1:80
-    BalancerMember http://backend2:80
-    BalancerMember http://backend3:80
-    ProxySet lbmethod=byrequests
-</Proxy>
-
-ProxyPass "/" "balancer://cluster/"
-ProxyPassReverse "/" "balancer://cluster/"
-```
-
----
-
-## 🐳 docker-compose.yml
-
-```yaml
-version: '3'
-services:
-  backend1:
-    build: ./backend1
-  backend2:
-    build: ./backend2
-  backend3:
-    build: ./backend3
-  balanceador:
-    build: ./balanceador
-    ports:
-      - "8080:80"
-```
-
----
-
-## ▶️ Ejecución
-
-```bash
-sudo docker-compose up --build
-```
-
----
-
-## 🌐 Acceso
-http://192.168.50.3:8080
-
----
-
-## 🧪 Verificación
-
-- Recargar la página varias veces
-- Debe cambiar entre backend1, backend2 y backend3
-
----
-
-## ✅ Estado actual
-
-- ✔ Balanceador funcionando
-- ✔ 3 backends activos
-- ✔ Docker funcionando
-
----
-
-## ⚠️ Pendiente (equipo)
-
-### 🔴 Integrar aplicación real
-https://github.com/julianviafara-arch/CybersecurityLab
-
-### 🔴 Cambiar algoritmo
-Modificar:
-
-```apache
-ProxySet lbmethod=byrequests
-```
-
-### 🔴 Pruebas de carga
-Usar Artillery
-
-### 🔴 Métricas
-- Latencia
-- Throughput
-- Errores
-
-### 🔴 Documentación
-- Informe IEEE
-
----
-
-## 🛠️ Comandos útiles
-
-```bash
-sudo docker ps
-sudo docker logs balanceador
-sudo docker-compose down
-```
----
-## 🎯 Conclusión
-Se dejó lista la infraestructura base con balanceo de carga funcional, preparada para integrar una aplicación real y realizar pruebas de rendimiento.
+**¿Para qué se usa?:** Envía las métricas en tiempo real a la consola web de Artillery.
+Importante: Para que este paso funcione, el equipo necesita crear una cuenta en artillery.io, obtener su API KEY y sustituirla en el comando.
+ Nota: Los reportes en la nube son limitados en la versión gratuita (retención de datos y número de pruebas), por lo que se recomienda usarlos solo para las pruebas finales.
+**Explicación del Script de Pruebas (test-load.yml)**
+El archivo de configuración de Artillery define cómo se va a "estresar" el balanceador. Aquí está el desglose de los parámetros configurados:
+target: Apunta a http://balancer:80. Se usa el nombre del servicio definido en el docker-compose para comunicación interna.
+phases: Define la intensidad de la prueba en 4 etapas para ver cómo escala el servidor:
+Fase 1 a 4: Cada una dura 60 segundos.
+arrivalRate: Define cuántos usuarios nuevos entran por segundo (desde 5 hasta 100).
+maxVusers: Es el límite de usuarios concurrentes (50, 100, 500 y 1000). Esto evita que la prueba colapse la máquina host si los servidores no responden a tiempo.
+scenarios: Define la acción del usuario. En este caso, una navegación básica (GET /) que permite verificar qué nodo del backend está procesando la solicitud.
