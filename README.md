@@ -113,7 +113,40 @@ Se centralizó toda la arquitectura mediante:
 - IP servidor: `192.168.50.3`
 
 ---
+## Vagrantfile
+```
+Vagrant.configure("2") do |config|
+  config.vm.boot_timeout = 600
 
+  # =========================
+  # SERVIDOR
+  # =========================
+  config.vm.define "servidor" do |servidor|
+    servidor.vm.box = "ubuntu/jammy64"
+    servidor.vm.hostname = "servidor"
+    servidor.vm.network "private_network", ip: "192.168.50.3"
+
+    servidor.vm.provider "virtualbox" do |vb|
+      vb.memory = 2048
+      vb.cpus = 2
+    end
+  end
+
+  # =========================
+  # CLIENTE
+  # =========================
+  config.vm.define "cliente" do |cliente|
+    cliente.vm.box = "ubuntu/jammy64"
+    cliente.vm.hostname = "cliente"
+    cliente.vm.network "private_network", ip: "192.168.50.2"
+
+    cliente.vm.provider "virtualbox" do |vb|
+      vb.memory = 1024
+      vb.cpus = 1
+    end
+  end
+end
+```
 ## 🧩 Arquitectura general
 
 ```
