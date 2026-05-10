@@ -12,7 +12,7 @@
 | Julián Viafara           | Integración aplicación web (CybersecurityLab)        |
 | Samuel Sepúlveda         | Configuración de algoritmos de balanceo              |
 | Sebastián Cobos          | Pruebas de carga (Artillery)                         |
-| Isabella Cabezas         | Métricas y análisis de resultados                    |
+| Isabela Cabezas         | Métricas y análisis de resultados                    |
 | Valentina Velastegui     | Documentación (README + informe IEEE)                |
 
 ---
