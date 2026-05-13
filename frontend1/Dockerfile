@@ -1,3 +1,24 @@
+FROM node:22 AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+ARG VITE_AUTH_API_URL
+ARG VITE_BLOG_API_URL
+ENV VITE_AUTH_API_URL=$VITE_AUTH_API_URL
+ENV VITE_BLOG_API_URL=$VITE_BLOG_API_URL
+
+COPY . .
+
+RUN npm run build
+
 FROM nginx:alpine
-COPY . /usr/share/nginx/html
-COPY default.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

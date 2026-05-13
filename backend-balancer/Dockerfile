@@ -1,12 +1,27 @@
 FROM httpd:2.4
 
-# Activar módulos necesarios
-RUN sed -i 's/#LoadModule proxy_module/LoadModule proxy_module/' /usr/local/apache2/conf/httpd.conf && \
-    sed -i 's/#LoadModule proxy_http_module/LoadModule proxy_http_module/' /usr/local/apache2/conf/httpd.conf && \
-    sed -i 's/#LoadModule proxy_balancer_module/LoadModule proxy_balancer_module/' /usr/local/apache2/conf/httpd.conf && \
-    sed -i 's/#LoadModule slotmem_shm_module/LoadModule slotmem_shm_module/' /usr/local/apache2/conf/httpd.conf && \
-    sed -i 's/#LoadModule lbmethod_byrequests_module/LoadModule lbmethod_byrequests_module/' /usr/local/apache2/conf/httpd.conf
+# =========================
+# ENABLE REQUIRED MODULES
+# =========================
+
+RUN sed -i '/mod_proxy.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_proxy_http.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_proxy_balancer.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_slotmem_shm.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_lbmethod_byrequests.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_status.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_headers.so/s/^#//g' /usr/local/apache2/conf/httpd.conf && \
+    sed -i '/mod_rewrite.so/s/^#//g' /usr/local/apache2/conf/httpd.conf
+
+# =========================
+# COPY BALANCER CONFIG
+# =========================
 
 COPY apache.conf /usr/local/apache2/conf/extra/balanceo.conf
 
-RUN echo "Include conf/extra/balanceo.conf" >> /usr/local/apache2/conf/httpd.conf
+# =========================
+# INCLUDE CUSTOM CONFIG
+# =========================
+
+RUN echo "Include conf/extra/balanceo.conf" \
+>> /usr/local/apache2/conf/httpd.conf

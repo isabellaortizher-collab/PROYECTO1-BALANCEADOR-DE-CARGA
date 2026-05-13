@@ -2,28 +2,69 @@ version: '3.8'
 
 services:
 
-  # BACKENDS EXISTENTES
+  # =========================
+  # AUTH BACKEND
+  # =========================
+
   backend1:
     build: ./backend1
-    container_name: backend1
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: host.docker.internal
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD:
+      DB_NAME: blog_db
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "3301:3000"
     networks:
       - proyecto_net
+
+  # =========================
+  # BLOG BACKEND 1
+  # =========================
 
   backend2:
     build: ./backend2
-    container_name: backend2
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: host.docker.internal
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD:
+      DB_NAME: blog_db
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - proyecto_net
+
+  # =========================
+  # BLOG BACKEND 2
+  # =========================
 
   backend3:
     build: ./backend3
-    container_name: backend3
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: host.docker.internal
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD:
+      DB_NAME: blog_db
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - proyecto_net
 
-  balanceador:
-    build: ./balanceador
-    container_name: balanceador
+  # =========================
+  # BACKEND LOAD BALANCER
+  # =========================
+
+  backend-balancer:
+    build: ./backend-balancer
+    restart: unless-stopped
     ports:
       - "8080:80"
     depends_on:
@@ -33,22 +74,41 @@ services:
     networks:
       - proyecto_net
 
-  # FRONTENDS NUEVOS
+  # =========================
+  # FRONTEND INSTANCE 1
+  # =========================
+
   frontend1:
-    build: ./frontend1
-    container_name: frontend1
+    build:
+      context: ./frontend1
+      args:
+        VITE_AUTH_API_URL: http://localhost:8080/api
+        VITE_BLOG_API_URL: http://localhost:8080/api
+    restart: unless-stopped
     networks:
       - proyecto_net
 
+  # =========================
+  # FRONTEND INSTANCE 2
+  # =========================
+
   frontend2:
-    build: ./frontend2
-    container_name: frontend2
+    build:
+      context: ./frontend2
+      args:
+        VITE_AUTH_API_URL: http://localhost:8080/api
+        VITE_BLOG_API_URL: http://localhost:8080/api
+    restart: unless-stopped
     networks:
       - proyecto_net
+
+  # =========================
+  # FRONTEND LOAD BALANCER
+  # =========================
 
   frontend-balancer:
     build: ./frontend-balancer
-    container_name: frontend-balancer
+    restart: unless-stopped
     ports:
       - "8090:80"
     depends_on:
@@ -56,6 +116,10 @@ services:
       - frontend2
     networks:
       - proyecto_net
+
+# =========================
+# NETWORK
+# =========================
 
 networks:
   proyecto_net:
