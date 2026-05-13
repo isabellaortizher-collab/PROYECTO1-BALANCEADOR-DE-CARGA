@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   # =========================
@@ -11,14 +9,17 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      DB_HOST: host.docker.internal
+      DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: root
-      DB_PASSWORD:
+      DB_PASSWORD: root
       DB_NAME: blog_db
       JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3301:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - proyecto_net
 
@@ -31,12 +32,15 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      DB_HOST: host.docker.internal
+      DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: root
-      DB_PASSWORD:
+      DB_PASSWORD: root
       DB_NAME: blog_db
       JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - proyecto_net
 
@@ -49,12 +53,15 @@ services:
     restart: unless-stopped
     environment:
       PORT: 3000
-      DB_HOST: host.docker.internal
+      DB_HOST: mysql
       DB_PORT: 3306
       DB_USER: root
-      DB_PASSWORD:
+      DB_PASSWORD: root
       DB_NAME: blog_db
       JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - proyecto_net
 
@@ -82,8 +89,8 @@ services:
     build:
       context: ./frontend1
       args:
-        VITE_AUTH_API_URL: http://localhost:8080/api
-        VITE_BLOG_API_URL: http://localhost:8080/api
+        VITE_AUTH_API_URL: http://192.168.50.3:8080/api
+        VITE_BLOG_API_URL: http://192.168.50.3:8080/api
     restart: unless-stopped
     networks:
       - proyecto_net
@@ -96,8 +103,8 @@ services:
     build:
       context: ./frontend2
       args:
-        VITE_AUTH_API_URL: http://localhost:8080/api
-        VITE_BLOG_API_URL: http://localhost:8080/api
+        VITE_AUTH_API_URL: http://192.168.50.3:8080/api
+        VITE_BLOG_API_URL: http://192.168.50.3:8080/api
     restart: unless-stopped
     networks:
       - proyecto_net
@@ -114,6 +121,27 @@ services:
     depends_on:
       - frontend1
       - frontend2
+    networks:
+      - proyecto_net
+  # =========================
+  # DATABASE
+  # =========================
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blog_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - proyecto_net
 
