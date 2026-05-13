@@ -1,0 +1,20 @@
+config:
+  target: "http://frontend-balancer"
+  processor: "./processor.js"
+  phases:
+    - duration: 10
+      arrivalCount: 50
+      name: "50 usuarios concurrentes"
+  defaults:
+    headers:
+      User-Agent: "Artillery Load Test - 50 usuarios"
+
+scenarios:
+  - name: "Prueba 50 usuarios"
+    flow:
+      - loop:
+          - get:
+              url: "/"
+              afterResponse: "countNode"
+          - think: 1
+        count: 30

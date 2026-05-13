@@ -1,4 +1,16 @@
 services:
+  # =========================
+  # ARTILLERY
+  # ========================
+
+  artillery:
+    image: artilleryio/artillery:latest
+    container_name: artillery_tests
+    volumes:
+      - ./artillery:/scripts
+      - ./resultados-artillery:/results
+    networks:
+      - proyecto_net
 
   # =========================
   # AUTH BACKEND

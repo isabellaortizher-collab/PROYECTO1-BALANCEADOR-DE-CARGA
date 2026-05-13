@@ -1,0 +1,13 @@
+config:
+  target: "http://frontend-balancer"
+  phases:
+    - duration: 60
+      arrivalRate: 20
+      name: "Prueba de tolerancia a fallos"
+
+scenarios:
+  - name: "Prueba apagando un backend"
+    flow:
+      - get:
+          url: "/"
+      - think: 1
