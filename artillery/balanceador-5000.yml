@@ -1,0 +1,18 @@
+config:
+  target: "http://frontend-balancer"
+  phases:
+    - duration: 120
+      arrivalCount: 5000
+      name: "Prueba de carga extrema - 5000 usuarios"
+  defaults:
+    headers:
+      User-Agent: "Artillery - 5000 usuarios"
+
+scenarios:
+  - name: "Prueba 5000 usuarios"
+    flow:
+      - loop:
+          - get:
+              url: "/"
+          - think: 1
+        count: 5

@@ -172,6 +172,61 @@ for i in {1..10}; do curl http://192.168.50.3:8080/health; echo ""; done
 ```
 
 ---
+## Pruebas de carga con Artillery
+Para evaluar el comportamiento del balanceador de carga se implementaron pruebas con **Artillery**, una herramienta especializada en pruebas de rendimiento y carga para servicios HTTP. Las pruebas fueron ejecutadas desde un contenedor Docker dedicado, dentro de la misma red del proyecto, apuntando al balanceador frontend.
+Los scripts para las pruebas se encuentran en la carpeta "artillery/", al terminar las pruebas, los resultados se guardan en formato .JSON en la carpeta "resultados-artillery/"
+
+Los archivos de pruebas son:
+artillery/balanceador-50.yml (prueba 50 usuarios)
+artillery/balanceador-100.yml (prueba 100 usuarios)
+artillery/balanceador-500.yml (prueba 500 usuarios)
+artillery/balanceador-1000.yml (prueba 1000 usuarios
+artillery/balanceador-5000.yml (prueba 5000 usuarios)
+artillery/balanceador-failover.yml (prueba de caida del backend)
+
+Para la ejecucion de las pruebas, se recomienda poner el siguiente comando antes de iniciar
+```bash
+export COMPOSE_HTTP_TIMEOUT=600
+export DOCKER_CLIENT_TIMEOUT=600
+```
+De esta manera se aumenta el timeout del servicio docker para evitar fallos en la ejecucion de la prueba por timeout.
+
+Tambien se proporciona el comando "./run-usuarios-tests.sh" el cual correra todas las pruebas de forma automatica.
+Las pruebas se pueden correr de forma individual con: 
+
+````bash
+sudo -E docker-compose run --rm artillery run \
+  --output /results/balanceador-X.json \
+  /scripts/balanceador-X.yml
+```
+
+Reemplazando X con el tipo de prueba a usar.
+---
+##Resultados Artillery
+
+| Prueba        | Requests | HTTP 200 | Usuarios completados | Usuarios fallidos | Req/s |      Mean |      p95 |     p99 |
+| ------------- | -------: | -------: | -------------------: | ----------------: | ----: | --------: | -------: | ------: |
+| 50 usuarios   |      936 |      919 |                   33 |                17 |  27/s |    9.6 ms |  32.8 ms | 49.9 ms |
+| 100 usuarios  |    2.831 |    2.831 |                   72 |                 0 |  56/s |    6.1 ms |    18 ms | 80.6 ms |
+| 500 usuarios  |    2.708 |    2.591 |                   10 |               108 |  57/s | 1044.7 ms |  25.8 ms | 50.9 ms |
+| 1000 usuarios |   19.714 |   19.564 |                  586 |               145 | 228/s | 4066.3 ms | 450.4 ms | 2231 ms |
+| 5000 usuarios |   25.000 |   25.000 |                 5000 |                 0 | 187/s |    4.9 ms |    18 ms | 47.9 ms |
+| Failover      |     1200 |     1200 |                 1200 |                 0 |  19/s |    1.4 ms |     3 ms |    6 ms |
+
+La prueba mas importante es la de 5000 usuarios, que es la mayor carga que se le da al servidor, la cual tambien ha dado buenos resultados:
+
+http.codes.200: 25000
+http.requests: 25000
+http.request_rate: 187/sec
+vusers.created: 5000
+vusers.completed: 5000
+vusers.failed: 0
+http.response_time.mean: 4.9 ms
+http.response_time.p95: 18 ms
+http.response_time.p99: 47.9 ms
+
+Estas pruebas permitieron validar el comportamiento del balanceador de carga bajo distintos escenarios, el sistema mostros buena estabilidad, baja latencia en la mayoria de casos y pocos errores en estas. Especialmente en la prueba de 5000 usuarios, donde los 5000 usuarios se ejecutaron sin problema alguno 
+---
 
 ## 🛠️ Comandos útiles
 
@@ -193,8 +248,12 @@ docker logs frontend-balancer
 ```
 
 ---
+<<<<<<< HEAD
 
 ## 📄 Vagrantfile
+=======
+## 🎯 Resultados obtenidos
+>>>>>>> dcaa980 (Se añade prueba de 5000 usuarios en Artillery y tambien se actualiza el README.md)
 
 ```ruby
 Vagrant.configure("2") do |config|
@@ -386,4 +445,150 @@ Se implementó exitosamente una arquitectura distribuida basada en **Apache**, *
 
 ---
 
+<<<<<<< HEAD
 > 📍 Universidad Autónoma de Occidente · Servicios Telemáticos · 2026-1
+=======
+👨‍💻 Contribución individual — Julián Viafara
+Mi responsabilidad principal fue la integración completa de la aplicación web CybersecurityLab dentro de la arquitectura distribuida del proyecto, adaptando una aplicación monolítica local para operar correctamente dentro del entorno Dockerizado con balanceadores de carga.
+
+🧩 Alcance del trabajo realizado
+1. Reestructuración de arquitectura backend
+La aplicación original contaba con un único servidor Express que manejaba autenticación y blog simultáneamente. Se identificó este monolito como el cuello de botella hipotético bajo alta concurrencia: las operaciones de autenticación (bcrypt, JWT) son intensivas en CPU, mientras que las operaciones del blog son intensivas en I/O, compitiendo por el mismo proceso.
+La solución fue separar el backend en dos servicios independientes:
+ContenedorFunciónPuerto internobackend1Servicio de autenticación3000backend2Instancia 1 del servicio Blog3000backend3Instancia 2 del servicio Blog3000
+Cada backend tiene su propio server.js, db.js, middleware y rutas, compartiendo únicamente el JWT_SECRET para que los tokens emitidos por el servicio Auth sean verificables por el servicio Blog.
+
+2. Configuración del balanceador backend (Apache)
+Se configuró Apache HTTP Server como API Gateway y balanceador de carga con enrutamiento basado en path:
+RutaDestino/api/auth/*backend1/api/blog/*backend2/backend3
+Problemas resueltos durante la configuración:
+
+Habilitación correcta de módulos Apache (mod_proxy, mod_proxy_balancer, mod_headers, mod_rewrite) mediante sed sobre httpd.conf, ya que a2enmod no está disponible en la imagen httpd:2.4.
+Corrección de error CORS: Apache y Express duplicaban el header Access-Control-Allow-Origin. Solución: CORS gestionado exclusivamente por Apache, eliminado de los tres backends.
+Corrección de preflight OPTIONS: Apache respondía 404 a las solicitudes OPTIONS. Solución: regla RewriteRule para retornar 204 inmediatamente sin proxying.
+Corrección de trailing slash en ProxyPass: Apache no matcheaba /api/blog sin slash final. Solución: dos reglas ProxyPass, con y sin slash.
+
+
+3. Integración del frontend React/Vite
+El frontend original usaba un único axios con baseURL apuntando al backend monolítico. Se realizaron los siguientes cambios:
+
+Reemplazo del export default de axios por dos instancias nombradas: authApi y blogApi.
+Actualización de todos los componentes y páginas para usar la instancia correcta según el tipo de operación.
+Corrección de variables de entorno Vite: las variables VITE_* deben inyectarse en tiempo de build, no en runtime. Se migraron de environment a build.args en Docker Compose, y se declararon como ARG/ENV en el Dockerfile.
+
+
+4. Dockerización de servicios backend
+Se desarrollaron Dockerfiles para los tres backends Node.js, y se configuró docker-compose.yml con:
+
+Variables de entorno correctas por servicio incluyendo JWT_SECRET en los tres backends.
+Conectividad a MySQL local mediante host.docker.internal.
+Red interna proyecto_net compartida entre todos los servicios.
+
+
+5. Depuración y resolución de errores end-to-end
+Durante la integración se identificaron y resolvieron los siguientes errores en secuencia:
+
+CORS bloqueado → headers duplicados entre Apache y Express → eliminado CORS de Express.
+OPTIONS preflight fallando → módulos mod_headers y mod_rewrite no habilitados en el Dockerfile → añadidos vía sed.
+404 en /api/blog → mismatch de trailing slash en ProxyPass → doble regla con y sin slash.
+401 en posts → JWT_SECRET ausente en backend2 y backend3 → añadido en docker-compose.yml.
+Variables VITE ignoradas → env vars en runtime no llegan a Vite → migradas a build args.
+
+
+🏗️ Arquitectura final implementada
+Cliente
+   │
+   ▼
+Frontend Balancer (Apache :8090)
+   │
+   ├── frontend1 (React/Vite)
+   └── frontend2 (React/Vite)
+          │
+          ▼
+Backend Balancer (Apache :8080)
+   │
+   ├── /api/auth/* → backend1 (Auth Service — JWT + bcrypt)
+   │
+   ├── /api/blog/* → backend2 (Blog Service)
+   └── /api/blog/* → backend3 (Blog Service) ← Round Robin
+          │
+          ▼
+   MySQL (XAMPP · host.docker.internal:3306)
+
+⚙️ Tecnologías utilizadas
+
+Docker + Docker Compose
+Apache HTTP Server (httpd:2.4)
+Node.js + Express
+React + Vite
+MySQL (XAMPP)
+JWT + bcryptjs
+
+
+🌐 Puertos utilizados
+ServicioPuertoFrontend Balancer8090Backend Balancer8080Backend Auth3301MySQL3306
+
+▶️ Ejecución
+bashdocker-compose down
+docker-compose up --build
+🌍 Acceso al sistema
+RecursoURLFrontendhttp://192.168.50.3:8090Backendhttp://192.168.50.3:8080Balancer Managerhttp://192.168.50.3:8080/balancer-manager
+
+🧪 Verificación de balanceo backend
+bashfor i in {1..10}; do curl http://192.168.50.3:8080/health; echo ""; done
+
+🛠️ Comandos útiles
+bashdocker ps
+docker-compose down
+docker-compose up --build
+docker logs backend-balancer
+docker logs backend2
+docker logs frontend-balancer
+
+📁 Estructura del proyecto
+proyecto1/
+├── README.md
+├── docker-compose.yml
+├── .env
+│
+├── backend-balancer/
+│   ├── Dockerfile
+│   └── apache.conf
+│
+├── backend1/          ← Auth Service
+│   ├── Dockerfile
+│   ├── server.js
+│   ├── db.js
+│   ├── middleware/
+│   └── routes/
+│       ├── auth.js
+│       └── admin.js
+│
+├── backend2/          ← Blog Service (instancia 1)
+│   ├── Dockerfile
+│   ├── server.js
+│   ├── db.js
+│   ├── middleware/
+│   └── routes/
+│       └── posts.js
+│
+├── backend3/          ← Blog Service (instancia 2)
+│   ├── Dockerfile
+│   ├── server.js
+│   ├── db.js
+│   ├── middleware/
+│   └── routes/
+│       └── posts.js
+│
+├── frontend-balancer/
+│   ├── Dockerfile
+│   └── apache.conf
+│
+├── frontend1/
+│   ├── Dockerfile
+│   └── src/
+│
+└── frontend2/
+    ├── Dockerfile
+    └── src/
+>>>>>>> dcaa980 (Se añade prueba de 5000 usuarios en Artillery y tambien se actualiza el README.md)
