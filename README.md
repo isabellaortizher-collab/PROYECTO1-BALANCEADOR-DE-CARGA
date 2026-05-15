@@ -19,25 +19,8 @@
 
 ## 🏗️ Arquitectura general
 
-```
-                        [ Cliente ]
-                             │
-                             ▼
-             Frontend Balancer (Apache :8090)
-                    /                  \
-             Frontend1             Frontend2
-          (CybersecurityLab)   (CybersecurityLab)
-                             │
-                             ▼
-             Backend Balancer (Apache :8080)
-               /api/auth/*          /api/blog/*
-                    │                /         \
-                backend1        backend2     backend3
-           (Auth — JWT/bcrypt)    (Blog Service — Round Robin)
-                             │
-                             ▼
-               MySQL (XAMPP · host.docker.internal:3306)
-```
+<img width="1697" height="927" alt="Diagrama de arquitectura" src="https://github.com/user-attachments/assets/e86f9475-f8b7-49d3-af44-f7283826a66d" />
+
 
 ---
 
