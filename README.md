@@ -19,7 +19,7 @@
 
 ## 🏗️ Arquitectura general
 
-<img width="1697" height="927" alt="Diagrama de arquitectura" src="https://github.com/user-attachments/assets/e86f9475-f8b7-49d3-af44-f7283826a66d" />
+<img width="1698" height="926" alt="Diagrama de arquitectura" src="https://github.com/user-attachments/assets/e00e8006-322b-4a65-99c7-58034424a369" />
 
 
 ---
