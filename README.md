@@ -316,22 +316,29 @@ docker stats
 
 ### Balanceador de Backend (Puerto 8080)
 
+
+
+```
 Cliente → backend-balancer:80 → /api/auth/* → backend1:3000
                               → /api/blog/* → balancer://blog_cluster
                                                ├── backend2:3000
                                                └── backend3:3000
+```
 
 ### Balanceador de Frontend (Puerto 8090)
-
+```
 Cliente → frontend-balancer:80 → balancer://frontendcluster
                                       ├── frontend1:80
                                       └── frontend2:80
+```
 
 ### Base de datos
 
 Todos los backends comparten la misma instancia MySQL configurada con:
 Base de datos: blog_db
+
 Usuario: root
+
 Contraseña: ****
 
 ## Notas
