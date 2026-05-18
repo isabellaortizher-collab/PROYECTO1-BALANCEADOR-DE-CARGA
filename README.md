@@ -1,35 +1,27 @@
-# Proyecto 1 — Balanceador de Carga con Apache mod_proxy_balancer
+# 🖥️ Proyecto 1 — Balanceador de Carga con Apache y Docker
+
+> **Curso 2026-1 · Universidad Autónoma de Occidente · Servicios Telemáticos**
+
+---
+
+## 👥 Equipo de trabajo
+
+| Integrante | Rol |
+|---|---|
+| Isabella Ortiz Hernández | Infraestructura base + Docker + Balanceador |
+| Julián Viafara | Integración aplicación web (CybersecurityLab) |
+| Samuel Sepúlveda | Configuración de algoritmos de balanceo |
+| Sebastián Cobos | Pruebas de carga (Artillery) |
+| Isabela Cabezas | Métricas y análisis de resultados |
+| Valentina Velastegui | Documentación (README + informe IEEE) |
+
+---
 
 ## Arquitectura
 
-```
-                    ┌─────────────────────────────────────────┐
-                    │          FRONTEND BALANCER              │
-                    │     Apache + mod_proxy_balancer         │
-                    │         Puerto: 8090                    │
-                    └──────────────┬──────────────────────────┘
-                                   │
-                 ┌─────────────────┴─────────────────┐
-                 │                                   │
-          ┌──────▼──────┐                    ┌───────▼──────┐
-          │  Frontend 1  │                    │  Frontend 2   │
-          │  (React)     │                    │  (React)      │
-          └─────────────┘                    └───────────────┘
+<img width="1698" height="926" alt="Diagrama de arquitectura" src="https://github.com/user-attachments/assets/e00e8006-322b-4a65-99c7-58034424a369" />
 
-                    ┌─────────────────────────────────────────┐
-                    │           BACKEND BALANCER              │
-                    │     Apache + mod_proxy_balancer          │
-                    │         Puerto: 8080                    │
-                    └──────────────┬──────────────────────────┘
-                                   │
-         ┌────────────┬────────────┴───────────┬────────────┐
-         │            │                        │            │
-   ┌─────▼─────┐ ┌────▼────┐            ┌──────▼────┐ ┌──────▼─────┐
-   │ Backend 1 │ │Backend 2│            │ Backend 3 │ │   MySQL    │
-   │  (Auth)   │ │ (Blog)  │            │  (Blog)   │ │  (Puerto   │
-   │ Port:3301 │ └─────────┘            └───────────┘ │  3306)     │
-   └───────────┘                                     └────────────┘
-```
+---
 
 ## Estructura del proyecto
 
@@ -108,7 +100,7 @@ proyecto1/
 Crear archivo `.env` en la raíz del proyecto:
 
 ```env
-JWT_SECRET=tu_secret_aqui
+JWT_SECRET=secret_aqui
 COMPOSE_HTTP_TIMEOUT=600
 DOCKER_CLIENT_TIMEOUT=600
 ```
@@ -205,10 +197,67 @@ for i in {1..10}; do curl http://localhost:8090; echo ""; done
 ```bash
 ./run-usuarios-tests.sh
 ```
+## Pruebas de carga con Artillery
+
+[Artillery](https://artillery.io/) es una herramienta de pruebas de rendimiento para servicios HTTP. Permite simular miles de usuarios concurrentes para evaluar el comportamiento del sistema bajo carga.
+
+### Archivos de prueba disponibles
+
+| Archivo | Descripción |
+|---------|-------------|
+| balanceador-50.yml | 50 usuarios simultáneos |
+| balanceador-100.yml | 100 usuarios simultáneos |
+| balanceador-500.yml | 500 usuarios simultáneos |
+| balanceador-1000.yml | 1000 usuarios simultáneos |
+| balanceador-5000.yml | 5000 usuarios simultáneos |
+| balanceador-failover.yml | Prueba de tolerancia a fallos |
+| processor.js | Hook personalizado para procesar respuestas |
+
+### Métricas capturadas
+
+Las pruebas generan archivos JSON con las siguientes métricas:
+
+| Métrica | Descripción |
+|---------|-------------|
+| http.codes.200 | Cantidad de respuestas con código 200 |
+| http.requests | Total de peticiones realizadas |
+| http.request_rate | Requests por segundo |
+| vusers.created | Usuarios virtuales creados |
+| vusers.completed | Usuarios que completaron la prueba |
+| vusers.failed | Usuarios que fallaron |
+| http.response_time.mean | Tiempo de respuesta promedio (ms) |
+| http.response_time.p95 | Percentil 95 de latencia (ms) |
+| http.response_time.p99 | Percentil 99 de latencia (ms) |
+
+### Estructura de un archivo de prueba
+
+yaml
+config:
+  target: "http://frontend-balancer"  # Apunta al balanceador
+  processor: "./processor.js"          # Hook para procesar respuestas
+  phases:
+    - duration: 10                    # Duración de la prueba (segundos)
+      arrivalCount: 500              # Número de usuarios virtuales
+      name: "500 usuarios concurrentes"
+
+scenarios:
+  - name: "Prueba de carga"
+    flow:
+      - loop:
+          - get:
+              url: "/"
+              afterResponse: "countNode"  # Cuenta qué nodo responde
+          - think: 1                    # Pausa entre peticiones (segundos)
+        count: 30                       # Peticiones por usuario virtual
+
+### Ejecutar todas las pruebas
+
+bash
+./run-usuarios-tests.sh
 
 ### Ejecutar prueba individual
 
-```bash
+bash
 # 50 usuarios
 docker-compose run --rm artillery run --output /results/balanceador-50.json /scripts/balanceador-50.yml
 
@@ -226,18 +275,41 @@ docker-compose run --rm artillery run --output /results/balanceador-5000.json /s
 
 # Prueba de failover
 docker-compose run --rm artillery run --output /results/failover.json /scripts/balanceador-failover.yml
-```
 
 ### Ver resultados
 
-```bash
+bash
+# Listar archivos de resultados
 ls -lh resultados-artillery/
+
+# Ver resultado de una prueba
 cat resultados-artillery/balanceador-100.json
-```
+
+# Ver resultado formateado
+docker-compose run --rm artillery report /results/balanceador-100.json
+
+### Crear nueva prueba
+
+Para crear una prueba con diferente número de usuarios, duplicar un archivo existente y modificar:
+
+yaml
+config:
+  target: "http://frontend-balancer"
+  phases:
+    - duration: 60                   # Ajustar duración
+      arrivalCount: 2000              # Cambiar número de usuarios
+      name: "2000 usuarios"
+
+### Notas sobre las pruebas
+
+Las pruebas se ejecutan desde un contenedor Docker conectado a la misma red del proyecto
+Los resultados se guardan en resultados-artillery/ y persisten entre ejecuciones
+La prueba de failover simula el comportamiento del sistema al apagar un backend
+Para visualizar gráficos de los resultados, usar artillery report o herramientas como Grafana
 
 ## Comandos útiles
 
-```bash
+bash
 # Ver contenedores activos
 docker ps
 
@@ -260,37 +332,34 @@ docker-compose up --scale backend2=5 -d
 
 # Ver uso de recursos
 docker stats
-```
 
 ## Arquitectura detallada
 
 ### Balanceador de Backend (Puerto 8080)
 
-```
 Cliente → backend-balancer:80 → /api/auth/* → backend1:3000
                               → /api/blog/* → balancer://blog_cluster
                                                ├── backend2:3000
                                                └── backend3:3000
-```
 
 ### Balanceador de Frontend (Puerto 8090)
 
-```
 Cliente → frontend-balancer:80 → balancer://frontendcluster
                                       ├── frontend1:80
                                       └── frontend2:80
-```
 
 ### Base de datos
 
 Todos los backends comparten la misma instancia MySQL configurada con:
-- Base de datos: `blog_db`
-- Usuario: `root`
-- Contraseña: `root`
+Base de datos: blog_db
+Usuario: root
+Contraseña: ****
 
 ## Notas
 
-- Los backends son servicios Node.js/Express que exponen APIs REST
-- El balanceo de carga se realiza mediante **Apache mod_proxy_balancer**
-- Los frontends son aplicaciones React conectadas a los backends balanceados
-- Artillery genera resultados JSON en `resultados-artillery/` para análisis posterior
+Los backends son servicios Node.js/Express que exponen APIs REST
+El balanceo de carga se realiza mediante **Apache mod_proxy_balancer**
+Los frontends son aplicaciones React conectadas a los backends balanceados
+Artillery genera resultados JSON en resultados-artillery/ para análisis posterior
+
+
