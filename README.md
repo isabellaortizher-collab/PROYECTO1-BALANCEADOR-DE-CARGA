@@ -229,27 +229,6 @@ Las pruebas generan archivos JSON con las siguientes métricas:
 | http.response_time.p95 | Percentil 95 de latencia (ms) |
 | http.response_time.p99 | Percentil 99 de latencia (ms) |
 
-### Estructura de un archivo de prueba
-
-yaml
-config:
-  target: "http://frontend-balancer"  # Apunta al balanceador
-  processor: "./processor.js"          # Hook para procesar respuestas
-  phases:
-    - duration: 10                    # Duración de la prueba (segundos)
-      arrivalCount: 500              # Número de usuarios virtuales
-      name: "500 usuarios concurrentes"
-
-scenarios:
-  - name: "Prueba de carga"
-    flow:
-      - loop:
-          - get:
-              url: "/"
-              afterResponse: "countNode"  # Cuenta qué nodo responde
-          - think: 1                    # Pausa entre peticiones (segundos)
-        count: 30                       # Peticiones por usuario virtual
-
 ### Ejecutar todas las pruebas
 
 bash
