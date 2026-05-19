@@ -349,3 +349,4 @@ Los frontends son aplicaciones React conectadas a los backends balanceados
 Artillery genera resultados JSON en resultados-artillery/ para análisis posterior
 
 
+Enlace Diapostivas: https://canva.link/vmcvsytlst03pwr
